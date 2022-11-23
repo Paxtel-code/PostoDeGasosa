@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -17,10 +18,14 @@ void flush_in() {
     } while (ch != EOF && ch != '\n');
 }
 
-void delay(unsigned int secs) {
-    unsigned int end = time(0) + secs;
-    while (time(0) < end)
-        ;
+void getTom(int bomba, int bombaI, char *tom) {
+    if (bomba > (bombaI / 3) * 2) {
+        strcpy(tom, GREEN);
+    } else if ((bomba < bombaI / 3) || bomba == 0) {
+        strcpy(tom, RED);
+    } else {
+        strcpy(tom, YELLOW);
+    }
 }
 
 void limpaChat() { system("clear"); }
@@ -62,13 +67,8 @@ int comprarGasosa(int bomba, int bombaI, float caixa, float valLitro) {
     int compra;
     char confirm;
     char tom[10];
-    if (bomba > (bombaI / 3) * 2) {
-        strcpy(tom, GREEN);
-    } else if ((bomba < bombaI / 3) || bomba == 0) {
-        strcpy(tom, RED);
-    } else {
-        strcpy(tom, YELLOW);
-    }
+    getTom(bomba,bombaI, tom);
+
     limpaChat();
     printf("%sGasolina na bomba: %s%d%s/%d\n", BLUE, tom, bomba, NONE, bombaI);
     printf("%sValor no caixa: %sR$ %.2f\n", BLUE, NONE, caixa);
@@ -118,13 +118,7 @@ int comprarGasosa(int bomba, int bombaI, float caixa, float valLitro) {
 void relatorio(int tamFila, float valLitro, int atendidos, int bomba,
                int bombaI, float caixa, int LVendidos) {
     char tom[10];
-    if (bomba > (bombaI / 3) * 2) {
-        strcpy(tom, GREEN);
-    } else if (bomba < bombaI / 3) {
-        strcpy(tom, RED);
-    } else {
-        strcpy(tom, YELLOW);
-    }
+    getTom(bomba,bombaI, tom);
     char op;
     while (op != 'F') {
         do {
@@ -185,15 +179,8 @@ void relatorio(int tamFila, float valLitro, int atendidos, int bomba,
 int menu(int op, int qtdCarros, int tamFila, int bombaI, int bomba,
          float caixa) {
     char tom[10];
-
+    getTom(bomba,bombaI, tom);
     do {
-        if (bomba > (bombaI / 3) * 2) {
-            strcpy(tom, GREEN);
-        } else if ((bomba < bombaI / 3) || bomba == 0) {
-            strcpy(tom, RED);
-        } else {
-            strcpy(tom, YELLOW);
-        }
         printf("%sCarros atualmente na fila: %s%d/%d\n", BLUE, NONE, qtdCarros,
                tamFila);
         printf("%sValor no caixa: %sR$ %.2f\n", BLUE, NONE, caixa);
@@ -218,21 +205,15 @@ int menu(int op, int qtdCarros, int tamFila, int bombaI, int bomba,
 
 int main(void) {
 
-    float valLitro;
-    int tamFila;
-    float caixa;
 
-    int op;
-    int atendidos = 0;
-    int LVendidos = 0;
-    int bombaI;
-    int LAbastecido;
-    int qtdCarros = 0;
-    int compra;
+    float valLitro, caixa;
+    int tamFila;
+
+    int op, atendidos = 0, LVendidos = 0, bombaI, LAbastecido,  qtdCarros = 0, compra;
 
     // introducao ------------------------------------
     limpaChat();
-    printf("%sAutor: %sEduardo Fadel\n\n", BLUE, NONE);
+    printf("%sAutor: %sEduardo Marcon Fadel\n\n", BLUE, NONE);
     printf("%s..:: Posto de Gasolina ::..%s\n\n", YELLOW, NONE);
     printf("O programa é um simulador de posto de gasolina que possui apenas uma "
            "bomba, o algoritmo é efetuado por meio de uma fila de carros que sao "
