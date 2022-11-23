@@ -19,6 +19,12 @@ struct Carro {
     int litros;
 };
 
+void delay(unsigned int secs) {
+    unsigned int end = time(0) + secs;
+    while (time(0) < end)
+        ;
+}
+
 void flush_in() {
     int ch;
     do {
@@ -128,24 +134,18 @@ void relatorio(int tamFila, float valLitro, int atendidos, int bomba,
     char tom[10];
     getTom(bomba, bombaI, tom);
     char op;
-    while (op != 'F') {
-        do {
-            printf("\nDigite a opção desejada:\n"
-                   "A - Quantidade de litros vendida\n"
-                   "B - Valor total das vendas\n"
-                   "C - Carros atendidos\n"
-                   "D - Combustível restante\n"
-                   "E - Arquivo de impressão\n"
-                   "F - Voltar\n");
-            flush_in();
-            scanf("%c", &op);
-            if (op != 'A' && op != 'B' && op != 'C' && op != 'D' && op != 'E' &&
-                op != 'F') {
-                limpaChat();
-                printf("%s\nOpção inválida%s\n\n", RED, NONE);
-            }
-        } while (op != 'A' && op != 'B' && op != 'C' && op != 'D' && op != 'E' &&
-                 op != 'F');
+    bool rep = true;
+    while (rep) {
+
+        printf("\nDigite a opção desejada:\n"
+               "A - Quantidade de litros vendida\n"
+               "B - Valor total das vendas\n"
+               "C - Carros atendidos\n"
+               "D - Combustível restante\n"
+               "E - Arquivo de impressão\n"
+               "F - Voltar\n");
+        flush_in();
+        scanf("%c", &op);
 
         switch (op) {
             case 'A':
@@ -178,7 +178,27 @@ void relatorio(int tamFila, float valLitro, int atendidos, int bomba,
                 printf("%sTamanho maximo da fila:%s %d carro(s)\n", BLUE, NONE, tamFila);
                 printf("%sPreço da Gasolina:%s R$ %.2f/Litro\n", BLUE, NONE, valLitro);
                 printf("%sCaixa atual:%s R$ %.2f\n", BLUE, NONE, caixa);
+
+                FILE *fp = fopen("registro.txt", "w");
+
+                // That's fprintf, not printf!
+                fprintf(fp, "Litros vendidos: %d\n", LVendidos);
+                fprintf(fp, "Valor total arrecadado: R$ %.2f\n", valLitro * LVendidos);
+                fprintf(fp, "Atendidos: %d carro(s)\n", LVendidos);
+                fprintf(fp, "Gasolina na bomba: %d/%d\n", bomba, bombaI);
+                fprintf(fp, "Caixa atual: R$ %.2f\n\n", caixa);
+                fprintf(fp, "Tamanho maximo da fila: %d carro(s)\n", tamFila);
+                fprintf(fp, "Preço da Gasolina: R$ %.2f/Litro\n", valLitro);
+                fclose(fp);
+
                 break;
+            case 'F':
+                rep = false;
+                break;
+
+            default:
+                limpaChat();
+                printf("%s\nOpção inválida%s\n\n", RED, NONE);
         }
     }
     limpaChat();
@@ -188,25 +208,21 @@ int menu(int op, int qtdCarros, int tamFila, int bombaI, int bomba,
          float caixa) {
     char tom[10];
     getTom(bomba, bombaI, tom);
-    do {
-        printf("%sCarros atualmente na fila: %s%d/%d\n", BLUE, NONE, qtdCarros,
-               tamFila);
-        printf("%sValor no caixa: %sR$ %.2f\n", BLUE, NONE, caixa);
-        printf("%sGasolina na bomba: %s%d%s/%d\n", BLUE, tom, bomba, NONE, bombaI);
 
-        printf("Digite a opção desejada:\n"
-               "1 - Adicionar carro\n"
-               "2 - Abastecer próximo carro\n"
-               "3 - Exibir fila de espera\n"
-               "4 - Relatório geral\n"
-               "5 - Comprar gasosa\n"
-               "6 - Encerrar\n");
-        scanf("%d", &op);
-        if (op < 1 || op > 6) {
-            limpaChat();
-            printf("%s\nOpção inválida%s\n\n", RED, NONE);
-        }
-    } while (op < 1 || op > 6);
+    printf("%sCarros atualmente na fila: %s%d/%d\n", BLUE, NONE, qtdCarros,
+           tamFila);
+    printf("%sValor no caixa: %sR$ %.2f\n", BLUE, NONE, caixa);
+    printf("%sGasolina na bomba: %s%d%s/%d\n", BLUE, tom, bomba, NONE, bombaI);
+
+    printf("Digite a opção desejada:\n"
+           "1 - Adicionar carro\n"
+           "2 - Abastecer próximo carro\n"
+           "3 - Exibir fila de espera\n"
+           "4 - Relatório geral\n"
+           "5 - Comprar gasosa\n"
+           "%s6 - Encerrar%s\n",
+           RED, NONE);
+    scanf("%d", &op);
 
     return op;
 }
@@ -235,17 +251,19 @@ void adicionar(struct Carro fila[], int qtdCarros) {
     flush_in();
     limpaChat();
     printf("Digite o modelo da nave:");
-    scanf("%s", &fila[qtdCarros].marca), printf("Digite a cor do potente:");
-    scanf("%s", &fila[qtdCarros].cor), printf("Digite a placa da maquina:");
-    scanf("%s", &fila[qtdCarros].placa),
-            printf("Digite a quantidade de portas da carruagem:");
+    scanf("%s", &fila[qtdCarros].marca);
+    printf("Digite a cor do potente:");
+    scanf("%s", &fila[qtdCarros].cor);
+    printf("Digite a placa da maquina:");
+    scanf("%s", &fila[qtdCarros].placa);
+    printf("Digite a quantidade de portas da carruagem:");
     fila[qtdCarros].portas = maior0i(fila[qtdCarros].portas);
     flush_in();
 }
 
 int main(void) {
 
-    struct Carro FilaAtendidos[50];
+    struct Carro *FilaAtendidos = (struct Carro *)calloc(1, sizeof(struct Carro));
 
     float valLitro, caixa;
     int tamFila;
@@ -269,7 +287,7 @@ int main(void) {
 
     printf("Digite o tamanho máximo da fila:\n");
     tamFila = maior0i(tamFila);
-    struct Carro fila[tamFila];
+    struct Carro *fila = (struct Carro *)calloc(tamFila, sizeof(struct Carro));
 
     printf("Digite o valor atual no caixa:\n");
     caixa = maior0f(caixa);
@@ -286,7 +304,8 @@ int main(void) {
     printf("Tamanho maximo da fila: %s%d carro(s)%s\n", BLUE, tamFila, NONE);
     printf("Preço da Gasolina: %sR$ %.2f/Litro%s\n\n", BLUE, valLitro, NONE);
 
-    while (op != 6) {
+    bool rep = true;
+    while (rep) {
 
         op = menu(op, qtdCarros, tamFila, bombaI, bomba, caixa);
         switch (op) {
@@ -323,18 +342,26 @@ int main(void) {
                             printf("\n%sAtualmente a bomba tem %d litro%s\n", RED, bomba, NONE);
                             printf("%sDigite um valor menor%s\n", RED, NONE);
                         } else { // abastecimento bem sucedido
+
                             FilaAtendidos[atendidos] = fila[0];
+                            FilaAtendidos[atendidos].litros = LAbastecido;
+                            atendidos++;
+                            FilaAtendidos = (struct Carro *)realloc(
+                                    FilaAtendidos, (atendidos + 1) * sizeof(struct Carro));
                             for (int i = 0; i < qtdCarros - 1; i++) {
                                 fila[i] = fila[i + 1];
                             }
+
                             qtdCarros--;
                             bomba -= LAbastecido;
                             LVendidos += LAbastecido;
                             limpaChat();
-                            printf("\n%sCarro abastecido com %d litros%s\n\n", GREEN,
-                                   LAbastecido, NONE);
+
                             caixa += LAbastecido * valLitro;
-                            atendidos++;
+                            printf("\n%sCarro abastecido com %d litros%s\n", GREEN,
+                                   LAbastecido, NONE);
+                            printf("\n%sFoi adicionado R$ %.2f ao caixa%s\n\n", GREEN,
+                                   LAbastecido * valLitro, NONE);
 
                             break;
                         }
@@ -343,7 +370,7 @@ int main(void) {
                 break;
             case 3: // exibir fila
                 limpaChat();
-                printf("Fila:\n\n");
+                printf("Fila de Espera:\n\n");
                 imprimirFila(fila, qtdCarros);
                 printf("Atendidos:\n\n");
                 imprimirAtendidos(FilaAtendidos, atendidos);
@@ -352,7 +379,7 @@ int main(void) {
             case 4: // relatorio
 
                 limpaChat();
-                printf("\n%sRelatório:%s\n\n", BLUE, NONE);
+                printf("\n%sRelatório:%s\n", BLUE, NONE);
                 relatorio(tamFila, valLitro, atendidos, bomba, bombaI, caixa, LVendidos);
                 break;
             case 5:
@@ -362,7 +389,16 @@ int main(void) {
                 break;
             case 6:
                 limpaChat();
-                printf("\nAdeus\n");
+                printf("Adeus\n");
+                remove("registro.txt");
+                delay(2);
+                limpaChat();
+                rep = false;
+                break;
+
+            default:
+                limpaChat();
+                printf("%s\nOpção inválida%s\n\n", RED, NONE);
                 break;
         }
     }
