@@ -1,15 +1,23 @@
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <ctype.h>
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
 #define YELLOW "\033[33m"
 #define NONE "\033[0m"
 #define BLUE "\033[0;34m"
+
+struct Carro {
+    char marca[20];
+    char cor[20];
+    char placa[7];
+    int portas;
+    int litros;
+};
 
 void flush_in() {
     int ch;
@@ -67,7 +75,7 @@ int comprarGasosa(int bomba, int bombaI, float caixa, float valLitro) {
     int compra;
     char confirm;
     char tom[10];
-    getTom(bomba,bombaI, tom);
+    getTom(bomba, bombaI, tom);
 
     limpaChat();
     printf("%sGasolina na bomba: %s%d%s/%d\n", BLUE, tom, bomba, NONE, bombaI);
@@ -118,7 +126,7 @@ int comprarGasosa(int bomba, int bombaI, float caixa, float valLitro) {
 void relatorio(int tamFila, float valLitro, int atendidos, int bomba,
                int bombaI, float caixa, int LVendidos) {
     char tom[10];
-    getTom(bomba,bombaI, tom);
+    getTom(bomba, bombaI, tom);
     char op;
     while (op != 'F') {
         do {
@@ -179,7 +187,7 @@ void relatorio(int tamFila, float valLitro, int atendidos, int bomba,
 int menu(int op, int qtdCarros, int tamFila, int bombaI, int bomba,
          float caixa) {
     char tom[10];
-    getTom(bomba,bombaI, tom);
+    getTom(bomba, bombaI, tom);
     do {
         printf("%sCarros atualmente na fila: %s%d/%d\n", BLUE, NONE, qtdCarros,
                tamFila);
@@ -203,13 +211,47 @@ int menu(int op, int qtdCarros, int tamFila, int bombaI, int bomba,
     return op;
 }
 
+void imprimirFila(struct Carro aux[], int t) {
+    for (int i = 0; i < t; i++) {
+        printf("%sPosicao %s[%s%d%s]\n", BLUE, NONE, RED, i + 1, NONE);
+        printf("%sMarca: %s%s\n", BLUE, NONE, aux[i].marca);
+        printf("%sCor: %s%s\n", BLUE, NONE, aux[i].cor);
+        printf("%sPlaca: %s%s\n", BLUE, NONE, aux[i].placa);
+        printf("%sPortas: %s%d\n\n", BLUE, NONE, aux[i].portas);
+    }
+}
+
+void imprimirAtendidos(struct Carro aux[], int t) {
+    for (int i = 0; i < t; i++) {
+        printf("%sMarca: %s%s\n", BLUE, NONE, aux[i].marca);
+        printf("%sCor: %s%s\n", BLUE, NONE, aux[i].cor);
+        printf("%sPlaca: %s%s\n", BLUE, NONE, aux[i].placa);
+        printf("%sPortas: %s%d\n", BLUE, NONE, aux[i].portas);
+        printf("%sLitros Abastecidos: %s%d\n\n", BLUE, NONE, aux[i].litros);
+    }
+}
+
+void adicionar(struct Carro fila[], int qtdCarros) {
+    flush_in();
+    limpaChat();
+    printf("Digite o modelo da nave:");
+    scanf("%s", &fila[qtdCarros].marca), printf("Digite a cor do potente:");
+    scanf("%s", &fila[qtdCarros].cor), printf("Digite a placa da maquina:");
+    scanf("%s", &fila[qtdCarros].placa),
+            printf("Digite a quantidade de portas da carruagem:");
+    fila[qtdCarros].portas = maior0i(fila[qtdCarros].portas);
+    flush_in();
+}
+
 int main(void) {
 
+    struct Carro FilaAtendidos[50];
 
     float valLitro, caixa;
     int tamFila;
 
-    int op, atendidos = 0, LVendidos = 0, bombaI, LAbastecido,  qtdCarros = 0, compra;
+    int op, atendidos = 0, LVendidos = 0, bombaI, LAbastecido, qtdCarros = 0,
+            compra;
 
     // introducao ------------------------------------
     limpaChat();
@@ -227,6 +269,7 @@ int main(void) {
 
     printf("Digite o tamanho máximo da fila:\n");
     tamFila = maior0i(tamFila);
+    struct Carro fila[tamFila];
 
     printf("Digite o valor atual no caixa:\n");
     caixa = maior0f(caixa);
@@ -236,7 +279,7 @@ int main(void) {
 
     int bomba = bombaI;
 
-    //------------------------------------------------
+    // codigo ---------------------------------------
 
     limpaChat();
     printf("Configurações iniciais:\n");
@@ -255,6 +298,7 @@ int main(void) {
                            RED, NONE);
                 } else {
                     qtdCarros++;
+                    adicionar(fila, qtdCarros - 1);
                     limpaChat();
                     printf("\n%sCarro adicionado%s\n\n", GREEN, NONE);
                 }
@@ -279,6 +323,10 @@ int main(void) {
                             printf("\n%sAtualmente a bomba tem %d litro%s\n", RED, bomba, NONE);
                             printf("%sDigite um valor menor%s\n", RED, NONE);
                         } else { // abastecimento bem sucedido
+                            FilaAtendidos[atendidos] = fila[0];
+                            for (int i = 0; i < qtdCarros - 1; i++) {
+                                fila[i] = fila[i + 1];
+                            }
                             qtdCarros--;
                             bomba -= LAbastecido;
                             LVendidos += LAbastecido;
@@ -295,7 +343,10 @@ int main(void) {
                 break;
             case 3: // exibir fila
                 limpaChat();
-                printf("\nFila:\n\n");
+                printf("Fila:\n\n");
+                imprimirFila(fila, qtdCarros);
+                printf("Atendidos:\n\n");
+                imprimirAtendidos(FilaAtendidos, atendidos);
 
                 break;
             case 4: // relatorio
